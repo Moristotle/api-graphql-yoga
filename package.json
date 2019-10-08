@@ -5,12 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": " nodemon src/index.js --ext js,graphql --exec babel-node",
-<<<<<<< HEAD
     "test": "echo \"Error: no test specified\" && exit 1",
     "get-schema": "graphql get-schema -p prisma"
-=======
-    "test": "echo \"Error: no test specified\" && exit 1"
->>>>>>> b606f0b05a338918d86c6588c48d24f7db3c249f
   },
   "keywords": [],
   "author": "",
@@ -20,10 +16,7 @@
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "graphql-yoga": "^1.18.3",
-<<<<<<< HEAD
     "prisma-binding": "^2.3.16",
-=======
->>>>>>> b606f0b05a338918d86c6588c48d24f7db3c249f
     "uuid": "^3.3.3"
   },
   "devDependencies": {
