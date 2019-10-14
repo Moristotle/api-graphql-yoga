@@ -1,60 +1,112 @@
+import getUserId from "../utils/getUserId";
+
 const Query = {
-	users(parent, args, ctx, info) {
-		const { query } = args;
-		const { db } = ctx;
+	users(parent, { query }, { prisma }, info) {
+		const opArgs = {};
 
-		if (!query) {
-			return db.users;
+		if (query) {
+			opArgs.where = {
+				OR: [
+					{
+						name_contains: query
+					},
+					{
+						email_contains: query
+					}
+				]
+			};
 		}
 
-		return db.users.filter(user => {
-			return user.name.toLowerCase().includes(query.toLowerCase());
-		});
+		return prisma.query.users(opArgs, info);
 	},
-	posts(parent, args, ctx, info) {
-		const { query } = args;
-		const { db } = ctx;
-
-		if (!query) {
-			return db.posts;
-		}
-
-		return db.posts.filter(post => {
-			const titleMatch = post.title
-				.toLowerCase()
-				.includes(args.query.toLowerCase());
-			const bodyMatch = post.body
-				.toLowerCase()
-				.includes(args.query.toLowerCase());
-			return titleMatch || bodyMatch;
-		});
-	},
-	comments(parent, args, ctx, info) {
-		const { query } = args;
-		const { db } = ctx;
-
-		if (!query) {
-			return db.comments;
-		}
-
-		return db.comments.filter(comment => {
-			return comment.text.toLowerCase().includes(query.toLowerCase());
-		});
-	},
-	me() {
-		return {
-			id: "123456",
-			name: "Thomas",
-			email: "thomas@example.com"
+	posts(parent, { query }, { prisma }, info) {
+		const opArgs = {
+			where: {
+				published: true
+			}
 		};
+
+		if (query) {
+			opArgs.where.OR = [
+				{
+					title_contains: query
+				},
+				{
+					body_contains: query
+				}
+			];
+		}
+
+		return prisma.query.posts(opArgs, info);
 	},
-	post() {
-		return {
-			id: "9876",
-			title: "comment",
-			body: "this is a comment on the utility of GraphQL Yoda",
-			published: true
+	comments(parent, { query }, { prisma }, info) {
+		const opArgs = {};
+		if (query) {
+			opArgs.where = {
+				text_contains: query
+			};
+		}
+		return prisma.query.comments(opArgs, info);
+	},
+	me(parent, args, { prisma, request }, info) {
+		const userId = getUserId(request);
+
+		return prisma.query.user({
+			where: {
+				id: userId
+			}
+		});
+	},
+	myPosts(parent, { query }, { prisma, request }, info) {
+		const userId = getUserId(request);
+		const opArgs = {
+			where: {
+				author: {
+					id: userId
+				}
+			}
 		};
+
+		if (query) {
+			opArgs.where.OR = [
+				{
+					title_contains: query
+				},
+				{
+					body_contains: query
+				}
+			];
+		}
+
+		return prisma.query.posts(opArgs, info);
+	},
+	async post(parent, { id }, { prisma, request }, info) {
+		const userId = getUserId(request, false);
+
+		const posts = await prisma.query.posts(
+			{
+				where: {
+					id,
+					OR: [
+						{
+							published: true
+						},
+						{
+							author: {
+								id: userId
+							}
+						}
+					]
+				}
+			},
+			info
+		);
+
+		if (posts.length === 0) {
+			throw new Error("Post not found");
+		}
+
+		return posts[0];
 	}
 };
 
